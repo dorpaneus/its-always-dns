@@ -27,7 +27,7 @@ This repository contains everything required to pass a heavy infrastructure, dis
 | Day | Topic | GCP / SRE Context | Interview Dimension |
 | :--- | :--- | :--- | :--- |
 | 1 | [Linux fundamentals - files, permissions, hard/symlinks](21-days/day-01-linux-fundamentals.md) | Cloud IAM, GCS objects vs POSIX | **RRK: System Internals** |
-| 2 | [Processes & the kernel - `ps`, signals, namespaces & cgroups](21-days/day-02-processes-namespaces.md) | Borg limits, GKE under the hood | **GCA: Complex Troubleshooting** |
+| 2 | [Processes & the kernel - ps, signals, namespaces & cgroups](21-days/day-02-processes-namespaces.md) | Borg limits, GKE under the hood | **GCA: Complex Troubleshooting** |
 | 3 | [Filesystems — mount, LVM recovery, LUKS, iSCSI](21-days/day-03-filesystems-lvm.md) | Persistent Disks (PD), Filestore | **Googliness: Navigating Ambiguity** |
 | 4 | [Boot & systemd — GRUB, recovery, kernel modules, `dmesg`](21-days/day-04-boot-systemd.md) | Serial Console, Custom Images | **Leadership: Bias for Reliability** |
 | 5 | [Networking I — TCP/IP, DNS, DHCP, "loading a website"](21-days/day-05-networking-tcp-dns.md) | Cloud DNS, VPC Subnets | **GCA: First Principles Thinking** |
