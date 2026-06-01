@@ -2,7 +2,7 @@
 
 > [!NOTE]
 > **Target Roles:** Senior Site Reliability Engineer (SRE) / Systems Engineer
-> **Daily Commitment:** ~3 hours every day commitment
+> **Daily Commitment:** ~3 hours every day commitment 
 > **Progress:** Day 1 to 21 scheduled
 
 This repository contains everything required to pass a heavy infrastructure, distributed systems, and behavioral interview loop at companies like Google. It is designed to bridge the gap between "I can fix a broken Linux server" and "I can design, observe, and recover a highly available, multi-region distributed system while maintaining an error budget."
