@@ -104,6 +104,16 @@ ln -s source.txt soft.txt
 ls -li
 ```
 * *Predict:* `source.txt` and `hard.txt` share the same inode and have a link count of 2. `soft.txt` has a different inode.
+* Today's depth: **the link count column** (column 2 of `ls -l`).
+
+For files: 1 by default. For directories: at least 2 — the directory itself, plus its own `.` entry. A directory with N subdirectories has link count `2 + N` because each subdir's `..` counts as a link to the parent. **This is the answer to "why does my empty-looking directory have link count 5?"**
+
+`ln` quirks worth internalizing:
+
+- `ln target linkname` — hard link
+- `ln -s target linkname` — symlink (the target string is stored *verbatim* — relative paths are resolved relative to the symlink's location, which surprises people)
+- `readlink linkname` — show the target string
+- `stat linkname` vs `stat -L linkname` — without `-L`, you stat the symlink itself; with `-L`, you follow it
 
 ### Lab 2: Extended ACLs (The hidden permissions)
 ```bash
@@ -156,6 +166,11 @@ echo "data" >> time.txt   # Updates mtime (Modify Data) & ctime (Change Inode)
 chmod 777 time.txt        # Updates ctime ONLY (Metadata changed, data did not)
 stat time.txt
 ```
+> [!CAUTION]
+> **Timestamps trap:**
+> - **atime** — last access (read). Often disabled with `noatime` mount option.
+> - **mtime** — last modification of *data*. What `ls -l` shows.
+> - **ctime** — last change of *inode metadata* (perms, owner, size, link count). **NOT creation time.**
 
 ---
 
