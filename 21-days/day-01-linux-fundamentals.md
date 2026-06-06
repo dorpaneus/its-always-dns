@@ -130,7 +130,24 @@ ln -s source.txt soft.txt
 ls -li
 ```
 * *Predict:* `source.txt` and `hard.txt` share the same inode and have a link count of 2. `soft.txt` has a different inode.
-* Today's depth: **the link count column** (column 2 of `ls -l`). For files: 1 by default. For directories: at least 2 - the directory itself, plus its own `.` entry. A directory with N subdirectories has link count `2 + N` because each subdir's `..` counts as a link to the parent. **This is the answer to "why does my empty-looking directory have link count 5?"**
+ Directory Hard Link Counts (`ls -l` Column 2)
+
+ Rules
+* **Regular Files:** `1` by default (only its own filename points to its data).
+* **Directories:** `2 + N` (where `N` is the number of subdirectories).
+
+ Why an "Empty" Directory starts at 2
+Every new directory automatically creates two pointers to its own inode:
+1. **The directory name** in its parent folder (`+1`).
+2. **The `.` (dot) entry** inside itself (`+1`).
+
+## Why does my directory have a link count of 5?
+Formula: `2 + N = 5`, meaning the directory contains exactly **3 subdirectories**.
+
+### The 5 Links Breakdown:
+* **Link 1:** The entry in the parent folder.
+* **Link 2:** The internal `.` entry.
+* **Links 3, 4, 5:** The `..` (dot-dot) parent pointers inside each of the **3 subdirectories**.
 
 `ln` quirks worth internalizing:
 
