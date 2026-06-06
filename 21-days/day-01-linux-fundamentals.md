@@ -46,8 +46,9 @@ When you run `ls -l`, the very first character indicates the file type.
 | `s` | **Socket** | Network or local IPC (e.g., Docker daemon socket `/var/run/docker.sock`). |
 
 Anatomy of an `ls -l` line - column by column. A single long-listing line packs **seven fields**, space-separated. Take this example:
-
-`-rw-r--r--   1   alice   staff   4096   May 28 10:30   notes.txt`
+```bash
+-rw-r--r--   1   alice   staff   4096   May 28 10:30   notes.txt
+```
 
 | # | Example        | Field                         | What it means |
 | - | -------------- | ----------------------------- | ------------- |
