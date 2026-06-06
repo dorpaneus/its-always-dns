@@ -47,7 +47,7 @@ The Virtual File System (VFS) is a kernel abstraction layer that acts as a **uni
 The Problem It Solves
 Without VFS, applications would need custom, hardcoded logic to interact with every single file system type. With VFS, applications use a single, unified set of system calls (e.g., `read()`) regardless of where or how the data is physically stored.
 
-The 4 Core VFS Objects
+**The 4 Core VFS Objects**
 
 | Object | What It Represents | Key Responsibility |
 | :--- | :--- | :--- |
