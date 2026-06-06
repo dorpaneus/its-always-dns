@@ -45,6 +45,24 @@ When you run `ls -l`, the very first character indicates the file type.
 | `p` | **Named Pipe (FIFO)** | IPC. Data written to one end is read from the other (e.g., `mkfifo`). |
 | `s` | **Socket** | Network or local IPC (e.g., Docker daemon socket `/var/run/docker.sock`). |
 
+Anatomy of an `ls -l` line - column by column. A single long-listing line packs **seven fields**, space-separated. Take this example:
+
+`-rw-r--r--   1   alice   staff   4096   May 28 10:30   notes.txt`
+
+| # | Example        | Field                         | What it means |
+| - | -------------- | ----------------------------- | ------------- |
+| 1 | `-rw-r--r--`   | **File type + permissions** | The *first* character is the file type (`-` file, `d` dir, `l` symlink, …). The next 9 characters are three permission triads — **owner**, **group**, **other** — each `rwx`. A trailing `.` means an SELinux context is present; a trailing `+` means a POSIX ACL is set. |
+| 2 | `1`            | **Hard-link count** | How many directory entries (names) point at this inode. Regular files start at 1; directories start at 2 and gain 1 for every subdirectory, because each subdir's `..` links back to the parent. |
+| 3 | `alice`        | **Owner (user)** | The user that owns the inode. This is who the *first* permission triad applies to, and what a setuid binary runs as. |
+| 4 | `staff`        | **Group** | The owning group — who the *middle* permission triad applies to. (`ls -ln` shows the numeric UID/GID instead of names.) |
+| 5 | `4096`         | **Size** | Size in **bytes** by default (`ls -lh` makes it human-readable). For a directory this is the size of its entry table, not the contents within. For a device file you'll see `major, minor` numbers here instead of a byte count. |
+| 6 | `May 28 10:30` | **Modification time (mtime)** | When the file's *data* last changed. `ls -lc` shows ctime (inode change), `ls -lu` shows atime (access), and `ls -l --full-time` shows full precision. |
+| 7 | `notes.txt`    | **Name** | The filename — i.e. the directory entry itself. For a symlink, `ls -l` appends `-> target` showing where it points. |
+
+> [!TIP]
+> **Quick way to remember the order:** > perms → links → owner → group → size → time → name.
+
+
 > [!IMPORTANT]
 > **☁️ The GCP Bridge: Persistent Disks vs. GCS**
 > Interviewers love testing if you know where POSIX ends and Cloud starts.
