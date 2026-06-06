@@ -29,7 +29,37 @@ When an application calls `read()` or `write()`, it talks to the VFS. The VFS th
 **The Three Pillars of a "File":**
 1. **The Inode (Index Node):** The true representation of the file on disk. It holds metadata (permissions, owner, size, timestamps, link count) and pointers to the physical data blocks. *It does not contain the filename.*
 2. **The Directory Entry (dentry):** The human-readable mapping. A directory is just a file whose data blocks contain a table pairing a `filename` with an `inode_number`.
-3. **The File Descriptor (FD):** The in-memory reference used by an active process. When a process opens a file, the kernel creates an FD pointing to an open file description, which points to the underlying inode. 
+3. **The File Descriptor (FD):** The in-memory reference used by an active process. When a process opens a file, the kernel creates an FD pointing to an open file description, which points to the underlying inode.
+
+## The Virtual File System (VFS) Layer
+
+The Big Picture
+The Virtual File System (VFS) is a kernel abstraction layer that acts as a **universal translator** between user-space applications and different file systems (`ext4`, `NFS`, `NTFS`, etc.). It enforces the core Unix philosophy: **"Everything is a file."**
+
+```
+[ User Space Application ] -> calls standard POSIX (open, read, write)
+          |
+[      VFS Layer       ] -> translates generic calls to FS-specific drivers
+          |
+[ Concrete File System ] -> ext4, XFS, NTFS, NFS
+          |
+[   Physical Hardware  ] -> SSD, NVMe, HDD
+```
+
+The Problem It Solves
+Without VFS, applications would need custom, hardcoded logic to interact with every single file system type. With VFS, applications use a single, unified set of system calls (e.g., `read()`) regardless of where or how the data is physically stored.
+
+---
+
+## The 4 Core VFS Objects
+
+| Object | What It Represents | Key Responsibility |
+| :--- | :--- | :--- |
+| **Superblock** | A mounted file system | Tracks filesystem-wide metadata (total size, block size, status flags). |
+| **Inode** | A physical disk object (file/folder) | Holds file metadata (permissions, size, owner, data block pointers). *Does not store the filename.* |
+| **Dentry** | A path component (e.g., `/home/user`) | Maps string filenames to physical inodes. Cached in RAM (dcache) for fast path resolution. |
+| **File** | An active, opened file | Tracks runtime interaction per process (current read/write position pointer, access modes). | 
+
 
 ### 1b. Linux File Types Reference
 
