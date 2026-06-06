@@ -133,8 +133,8 @@ ls -li
 * Directory Hard Link Counts (`ls -l` Column 2)
 * **Regular Files:** `1` by default (only its own filename points to its data). Directories:** `2 + N` (where `N` is the number of subdirectories).
 * Why an "Empty" Directory starts at 2? Every new directory automatically creates two pointers to its own inode:
-1. **The directory name** in its parent folder (`+1`).
-2. **The `.` (dot) entry** inside itself (`+1`).
+- The directory name in its parent folder (`+1`).
+- The `.` (dot) entry inside itself (`+1`).
 * Why does my directory have a link count of 5 ? (Formula: `2 + N = 5`, meaning the directory contains exactly `3 subdirectories`.)
 
 ### The 5 Links Breakdown:
