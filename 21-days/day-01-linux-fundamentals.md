@@ -18,7 +18,7 @@
 
 ---
 
-## 🧠 Morning Block — The Unix File Model & VFS
+## 🧠 Morning Block - The Unix File Model & VFS
 
 ### 1a. Everything is a file (and the VFS Layer)
 
