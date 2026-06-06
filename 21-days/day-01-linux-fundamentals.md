@@ -31,7 +31,9 @@ When an application calls `read()` or `write()`, it talks to the VFS. The VFS th
 2. **The Directory Entry (dentry):** The human-readable mapping. A directory is just a file whose data blocks contain a table pairing a `filename` with an `inode_number`.
 3. **The File Descriptor (FD):** The in-memory reference used by an active process. When a process opens a file, the kernel creates an FD pointing to an open file description, which points to the underlying inode.
 
-## The Virtual File System (VFS) Layer
+The Virtual File System (VFS) Layer
+
+---
 
 The Big Picture
 The Virtual File System (VFS) is a kernel abstraction layer that acts as a **universal translator** between user-space applications and different file systems (`ext4`, `NFS`, `NTFS`, etc.). It enforces the core Unix philosophy: **"Everything is a file."**
@@ -49,9 +51,7 @@ The Virtual File System (VFS) is a kernel abstraction layer that acts as a **uni
 The Problem It Solves
 Without VFS, applications would need custom, hardcoded logic to interact with every single file system type. With VFS, applications use a single, unified set of system calls (e.g., `read()`) regardless of where or how the data is physically stored.
 
----
-
-## The 4 Core VFS Objects
+The 4 Core VFS Objects
 
 | Object | What It Represents | Key Responsibility |
 | :--- | :--- | :--- |
