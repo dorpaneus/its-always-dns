@@ -16,8 +16,6 @@
 > 
 > Today builds the foundational mental model that makes these answers automatic.
 
----
-
 ## 🧠 Morning Block - The Unix File Model & VFS
 
 ### 1a. Everything is a file (and the VFS Layer)
