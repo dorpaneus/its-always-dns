@@ -147,21 +147,185 @@ stat time.txt
 
 Answer out loud. Force structure.
 
-1. Walk through every column of `ls -l /etc/shadow`.
-2. A junior engineer complains their app is crashing with "No space left on device", but `df -h` shows 50% free space. What is the cause, how do you verify, and how do you fix it?
-3. What is the architectural difference between modifying a file's permission on a local `ext4` disk versus updating permissions on a Google Cloud Storage object?
-4. You accidentally deleted a critical configuration file, but you know the `nginx` process still has it loaded in memory. How do you get the contents back?
-5. Why does an empty directory have a link count of 2?
+### 1. Walk through every column of `ls -l /etc/shadow`.
 
 <details>
-<summary><strong>Answers</strong> (click to reveal)</summary>
+<summary>Answer</summary>
 
-1. Type+perms / hard-link count / owner / group / size (in bytes) / mtime / name. 
-2. **Inode exhaustion.** Verify with `df -i`. Cause: millions of tiny files (like session files or un-rotated logs). Fix: Find the directory with the most files (`find / -xdev -type f | cut -d "/" -f 2 | sort | uniq -c | sort -n`) and delete them.
-3. `ext4` permissions are stored locally in the file's inode and evaluated by the kernel's VFS layer instantaneously. GCS permissions are evaluated via Cloud IAM; updating them requires an API call to Google's control plane, which propagates eventually consistent IAM policies.
-4. Find the PID of `nginx`. Look in `/proc/<PID>/fd/` for the symlink pointing to the `(deleted)` file. Copy the contents of that FD to a new file: `cat /proc/<PID>/fd/<FD_NUM> > /etc/nginx/recovered.conf`.
-5. The directory entry itself counts as 1. The `.` (current directory) hidden entry inside the directory counts as the 2nd link to the same inode.
+Left to right: **type + permission bits** / **hard-link count** / **owner** / **group** / **size in bytes** / **mtime** / **name**.
+
+Call out any special bits if they appear in the permission field (setuid `s`, setgid `s`, sticky `t`).
+
 </details>
+
+
+### 2. Hard link vs symlink — give one case where you *must* use each.
+
+<details>
+<summary>Answer</summary>
+
+**Symlink required:** when crossing filesystems, or when pointing at a directory — hard links can do neither.
+
+**Hard link required:** when the link must survive the original being renamed, moved, or deleted, since both names reference the same inode.
+
+</details>
+
+### 3. Difference between `mtime` and `ctime`?
+
+<details>
+<summary>Answer</summary>
+
+**mtime** = file *data* last changed. **ctime** = *inode metadata* last changed (perms, owner, size, link count).
+
+Editing content bumps both; `chmod` bumps only ctime.
+
+</details>
+
+### 4. Disk is 100% full but I just deleted a 50&nbsp;GB log. `df` still shows full. What now?
+
+<details>
+<summary>Answer</summary>
+
+A process still holds the unlinked file descriptor open, so the inode (and its blocks) aren't freed. Find it with `sudo lsof +L1`.
+
+Restart or kill that process; the space is reclaimed when the FD closes.
+
+</details>
+
+### 5. `-rwsr-xr-x root root` on a binary. What's the `s` and what's the security implication?
+
+<details>
+<summary>Answer</summary>
+
+**Setuid root.** Anyone who runs it executes with root's privileges, not their own.
+
+If the binary is buggy → privilege escalation. Expected on `passwd`/`sudo`; a red flag on anything user-writable or unusual.
+
+</details>
+
+### 6. Why might a directory have link count 5 even though I never ran `ln`?
+
+<details>
+<summary>Answer</summary>
+
+The directory's own entry, plus its internal `.`, plus the `..` entry inside every subdirectory all point back to its inode.
+
+So **count = 2 + N_subdirs**. A count of 5 means 3 subdirectories.
+
+</details>
+
+### 7. What perms does `umask 0027` give to new files and new dirs?
+
+<details>
+<summary>Answer</summary>
+
+Files: **640** (`rw-r-----`). Dirs: **750** (`rwxr-x---`).
+
+The mask subtracts from the base (666 for files, 777 for dirs).
+
+</details>
+
+### 8. Where is a file's creation time on ext4?
+
+<details>
+<summary>Answer</summary>
+
+ext4 stores it in the inode as `crtime`, but plain `stat()` / POSIX doesn't expose it.
+
+Read it via `statx()`, or with `debugfs -R 'stat <inode>' /dev/sdX`.
+
+</details>
+
+### 9. A junior's app crashes with "No space left on device", but `df -h` shows 50% free. Cause, verify, fix?
+
+<details>
+<summary>Answer</summary>
+
+**Inode exhaustion** — blocks are free but inodes aren't.
+
+- **Verify:** `df -i`.
+- **Cause:** millions of tiny files (sessions, un-rotated logs).
+- **Fix:** locate the offending dir — e.g. `find / -xdev -type f | cut -d "/" -f 2 | sort | uniq -c | sort -n` — then clean it up.
+
+</details>
+
+### 10. Architectural difference between changing perms on a local `ext4` disk vs. on a Google Cloud Storage object?
+
+<details>
+<summary>Answer</summary>
+
+**ext4:** permissions live in the file's inode and are enforced instantly by the kernel's VFS layer — a local metadata write.
+
+**GCS:** access is governed by Cloud IAM. Changing it is an API call to Google's control plane, and the IAM policy propagates with eventual consistency.
+
+</details>
+
+### 11. You deleted a critical config file, but `nginx` still has it loaded in memory. How do you recover the contents?
+
+<details>
+<summary>Answer</summary>
+
+Find nginx's PID, then look in `/proc/<PID>/fd/` for the symlink marked `(deleted)`.
+
+Copy that FD straight to a fresh file: `cat /proc/<PID>/fd/<FD> > /etc/nginx/recovered.conf`.
+
+</details>
+
+### 12. Why does an empty directory have a link count of 2?
+
+<details>
+<summary>Answer</summary>
+
+Two names point at the same inode: the directory entry in its parent (1), plus the `.` entry inside itself (2).
+
+This is the base case of the general rule **count = 2 + N_subdirs**.
+
+</details>
+
+### 13. Load average is 8 on a 4-core box, but `top` shows CPU near idle. What's going on, and how do you confirm?
+
+<details>
+<summary>Answer</summary>
+
+Linux load average counts processes in **R (runnable)** *and* **D (uninterruptible sleep)** states — and D-state usually means blocked on I/O, not CPU. So a high load with idle CPU points to an **I/O bottleneck**, not a compute one.
+
+- **Confirm the D-state procs:** `ps -eo state,pid,cmd | grep '^D'` or watch the `%wa` (iowait) column in `top`/`vmstat 1`.
+- **Find the source:** `iostat -x 1` for per-device `%util` and `await`; `iotop` for the offending process.
+- **Check for hardware trouble:** `dmesg` for disk/controller resets or a degraded RAID/network-storage mount (NFS hangs are a classic cause).
+
+Bonus depth: `kill -9` won't clear a true D-state process — it can't be interrupted until the kernel I/O completes.
+
+</details>
+
+### 14. You set up `logrotate` for a chatty app, but the disk keeps filling and `du` on the new log shows it's tiny. Why, and how do you fix it?
+
+<details>
+<summary>Answer</summary>
+
+The app still holds the **original file descriptor** open. `logrotate` renamed the file (`app.log` → `app.log.1`), but the process keeps writing to the same inode — now an unlinked/renamed file you can't see in `du` on the new path. Space never comes back until that FD is released.
+
+- **Verify:** `sudo lsof -p <PID> | grep log` (or `lsof +L1`) shows it writing to the old/deleted inode.
+- **Fix — two standard options:**
+  - `copytruncate` in the logrotate config: copies then truncates the live file in place, so the FD stays valid. Simple, but risks losing the lines written between copy and truncate.
+  - **`postrotate` reopen:** signal the app to reopen its log (e.g. `nginx -s reopen`, or `kill -HUP <PID>` / `systemctl reload`). Cleaner — no lost lines — and the preferred pattern for well-behaved daemons.
+
+This is the same open-FD trap as the "deleted log, `df` still full" question, just triggered by rotation instead of `rm`.
+
+</details>
+
+### 15. The OOM killer terminated your service, but `free -m` on the host showed several GB available. How is that possible?
+
+<details>
+<summary>Answer</summary>
+
+The process hit a **cgroup memory limit**, not host exhaustion. Under cgroups v2 (containers, systemd slices), a process is OOM-killed when its cgroup crosses `memory.max`, regardless of how much RAM the host has left.
+
+- **Confirm:** `dmesg` / `journalctl -k` will name the killed PID and the cgroup, often with a `memory cgroup out of memory` line; inspect `cat /sys/fs/cgroup/.../memory.max` and `memory.current` / `memory.stat`.
+- **Less common alternates to mention:** per-NUMA-node pressure (memory free but not on the node the allocation needs), or `vm.overcommit` plus a single huge allocation that can't be satisfied contiguously.
+- **Fix:** raise the cgroup/container limit, lower the app's footprint (heap/worker tuning), or set sane requests/limits so the scheduler places it correctly — and add memory-pressure alerting (PSI: `/proc/pressure/memory`) rather than relying on host-level `free`.
+
+</details>
+
 
 ### 🤝 Behavioral — Story #1: Role-Related Knowledge (RRK) & Troubleshooting
 
